@@ -1,0 +1,13 @@
+# Prueba 3: Entrada de datos y estructura if-else
+
+int edad
+
+write("Ingresa tu edad: ")
+read(edad)
+
+if edad >= 18:
+    write("Eres mayor de edad")
+    write("Puedes continuar")
+else:
+    write("Eres menor de edad")
+    write("Acceso denegado")

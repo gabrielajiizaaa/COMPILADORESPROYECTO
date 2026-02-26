@@ -1,0 +1,22 @@
+# Prueba 4: Definición y llamada de función con parámetros
+
+func sumar(int a, int b):
+    int resultado
+    resultado = a + b
+    return resultado
+
+func calcularArea(float base, float altura):
+    float area
+    area = base * altura
+    return area
+
+int suma
+float area
+
+suma = sumar(10, 25)
+write("La suma es: ")
+write(suma)
+
+area = calcularArea(5.0, 3.5)
+write("El área es: ")
+write(area)

@@ -1,0 +1,4 @@
+# Prueba 1: Hola Mundo
+# Imprime un mensaje de saludo
+
+write("Hola Mundo")

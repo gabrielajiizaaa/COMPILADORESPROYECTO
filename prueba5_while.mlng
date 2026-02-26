@@ -1,0 +1,24 @@
+# Prueba 5: Variables, entrada/salida y bucle while
+
+int limite
+int contador
+int suma
+float promedio
+
+write("Ingresa el límite del contador: ")
+read(limite)
+
+contador = 1
+suma = 0
+
+while contador <= limite:
+    write("Número: ")
+    write(contador)
+    suma = suma + contador
+    contador += 1
+
+promedio = suma / limite
+write("Suma total: ")
+write(suma)
+write("Promedio: ")
+write(promedio)

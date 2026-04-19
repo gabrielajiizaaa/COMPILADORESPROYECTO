@@ -95,14 +95,14 @@ class Token:
                 f"L{self.linea}:C{self.col_inicio}-{self.col_fin})")
 
     def a_linea_salida(self) -> str:
-        """Formato de salida para el archivo .out"""
+        """Genera la línea de salida con formato para el archivo .out"""
         val = "" if self.valor is None else f" {self.valor}"
         return (f"({self.linea},{self.col_inicio}-{self.col_fin}) "
                 f"{self.tipo.name}{val}")
 
 # ANALIZADOR LÉXICO
 class AnalizadorLexico:
-    """Analizador léxico para MiniLang."""
+    """Analizador léxico completo para el lenguaje MiniLang."""
 
     # Expresiones regulares 
     RE_ID       = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -296,7 +296,7 @@ class AnalizadorLexico:
         return Token(tipo, lexema, l, c, c + len(m.group()) - 1)
 
     def _leer_comentario(self) -> Token:
-        """Lee un comentario de línea."""
+        """Lee y retorna un token de comentario de línea."""
         l, c = self.linea, self.col
         m = self.RE_COMENTARIO.match(self._resto())
         texto = m.group() if m else '#'

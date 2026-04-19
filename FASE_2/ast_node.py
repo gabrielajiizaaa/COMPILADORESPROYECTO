@@ -1,7 +1,7 @@
 """
-AST Node Definitions for MiniLang Phase 2 (Syntactic Analysis)
-These are simple data structures to represent the syntax tree.
-No execution or interpretation logic - only structural representation.
+Definición de nodos del Árbol Sintáctico Abstracto (AST) para MiniLang — Fase 2.
+Son estructuras de datos simples para representar el árbol sintáctico.
+No contienen lógica de ejecución ni interpretación; solo representación estructural.
 """
 
 from dataclasses import dataclass
@@ -9,156 +9,155 @@ from typing import Optional, List, Any
 
 
 @dataclass
-class ASTNode:
-    """Base class for all AST nodes"""
+class NodoAST:
+    """Clase base de todos los nodos del AST."""
     pass
 
 
 @dataclass
-class Program(ASTNode):
-    """Root node representing entire program"""
-    statements: List['Statement']
+class Programa(NodoAST):
+    """Nodo raíz que representa el programa completo."""
+    sentencias: List['Sentencia']
 
 
 @dataclass
-class Statement(ASTNode):
-    """Base class for statements"""
+class Sentencia(NodoAST):
+    """Clase base para todas las sentencias."""
     pass
 
 
 @dataclass
-class Declaration(Statement):
-    """Variable declaration: int x, float y, etc."""
-    type_name: str  # 'int', 'float', 'string', 'bool'
-    identifier: str
+class Declaracion(Sentencia):
+    """Declaración de variable: int x, float y, etc."""
+    tipo: str        # 'int', 'float', 'string', 'bool'
+    identificador: str
 
 
 @dataclass
-class Assignment(Statement):
-    """Variable assignment: x = value, x += value, etc."""
-    identifier: str
-    operator: str  # '=', '+=', '-=', '*=', '/='
-    value: 'Expression'
+class Asignacion(Sentencia):
+    """Asignación de variable: x = valor, x += valor, etc."""
+    identificador: str
+    operador: str    # '=', '+=', '-=', '*=', '/='
+    valor: 'Expresion'
 
 
 @dataclass
-class FunctionDef(Statement):
-    """Function definition: func name(type param1, ...): BLOQUE"""
-    name: str
-    parameters: List[tuple]  # [(type, name), ...]
-    body: 'Block'
+class DefinicionFuncion(Sentencia):
+    """Definición de función: func nombre(tipo param1, ...): BLOQUE"""
+    nombre: str
+    parametros: List[tuple]  # lista de (tipo, nombre)
+    cuerpo: 'Bloque'
 
 
 @dataclass
-class IfStmt(Statement):
-    """If/else statement with body"""
-    condition: 'Expression'
-    then_block: 'Block'
-    else_block: Optional['Block'] = None
+class SentenciaIf(Sentencia):
+    """Sentencia if/else con sus bloques de cuerpo."""
+    condicion: 'Expresion'
+    bloque_entonces: 'Bloque'
+    bloque_sino: Optional['Bloque'] = None
 
 
 @dataclass
-class WhileStmt(Statement):
-    """While loop"""
-    condition: 'Expression'
-    body: 'Block'
+class SentenciaMientras(Sentencia):
+    """Bucle while."""
+    condicion: 'Expresion'
+    cuerpo: 'Bloque'
 
 
 @dataclass
-class ReturnStmt(Statement):
-    """Return statement"""
-    value: Optional['Expression']
+class SentenciaRetornar(Sentencia):
+    """Sentencia return."""
+    valor: Optional['Expresion']
 
 
 @dataclass
-class ReadStmt(Statement):
-    """Input statement: read(var)"""
-    identifier: str
+class SentenciaLeer(Sentencia):
+    """Sentencia de entrada: read(variable)"""
+    identificador: str
 
 
 @dataclass
-class WriteStmt(Statement):
-    """Output statement: write(expr)"""
-    expression: 'Expression'
+class SentenciaEscribir(Sentencia):
+    """Sentencia de salida: write(expresion)"""
+    expresion: 'Expresion'
 
 
 @dataclass
-class ExpressionStatement(Statement):
-    """Expression as statement (mainly for function calls)"""
-    expression: 'Expression'
+class SentenciaExpresion(Sentencia):
+    """Expresión usada como sentencia (principalmente llamadas a función)."""
+    expresion: 'Expresion'
 
 
 @dataclass
-class Block(ASTNode):
-    """Block of statements (indented)"""
-    statements: List[Statement]
+class Bloque(NodoAST):
+    """Bloque de sentencias delimitado por indentación."""
+    sentencias: List[Sentencia]
 
 
 @dataclass
-class Expression(ASTNode):
-    """Base class for expressions"""
+class Expresion(NodoAST):
+    """Clase base para todas las expresiones."""
     pass
 
 
 @dataclass
-class BinaryOp(Expression):
-    """Binary operation: a + b, a * b, etc."""
-    left: Expression
-    operator: str
-    right: Expression
+class OperacionBinaria(Expresion):
+    """Operación binaria: a + b, a * b, a == b, etc."""
+    izquierda: Expresion
+    operador: str
+    derecha: Expresion
 
 
 @dataclass
-class UnaryOp(Expression):
-    """Unary operation: -x, not x"""
-    operator: str
-    operand: Expression
+class OperacionUnaria(Expresion):
+    """Operación unaria: -x, not x"""
+    operador: str
+    operando: Expresion
 
 
 @dataclass
-class FunctionCall(Expression):
-    """Function call: func(arg1, arg2, ...)"""
-    name: str
-    arguments: List[Expression]
+class LlamadaFuncion(Expresion):
+    """Llamada a función: nombre(arg1, arg2, ...)"""
+    nombre: str
+    argumentos: List[Expresion]
 
 
 @dataclass
-class Identifier(Expression):
-    """Variable or function identifier"""
-    name: str
+class Identificador(Expresion):
+    """Identificador de variable o función."""
+    nombre: str
 
 
 @dataclass
-class IntLiteral(Expression):
-    """Integer literal"""
-    value: int
+class LiteralEntero(Expresion):
+    """Literal entero."""
+    valor: int
 
 
 @dataclass
-class FloatLiteral(Expression):
-    """Float literal"""
-    value: float
+class LiteralFlotante(Expresion):
+    """Literal flotante."""
+    valor: float
 
 
 @dataclass
-class StringLiteral(Expression):
-    """String literal"""
-    value: str
+class LiteralCadena(Expresion):
+    """Literal de cadena de texto."""
+    valor: str
 
 
 @dataclass
-class BoolLiteral(Expression):
-    """Boolean literal (true/false)"""
-    value: bool
+class LiteralBooleano(Expresion):
+    """Literal booleano (true / false)."""
+    valor: bool
 
 
 @dataclass
-class ParenthesizedExpr(Expression):
-    """Parenthesized expression"""
-    expression: Expression
+class ExpresionParentizada(Expresion):
+    """Expresión encerrada entre paréntesis."""
+    expresion: Expresion
 
 
-# Helper function to create an empty block
-def empty_block():
-    """Create an empty block"""
-    return Block([])
+def bloque_vacio():
+    """Crea y retorna un bloque sin sentencias."""
+    return Bloque([])

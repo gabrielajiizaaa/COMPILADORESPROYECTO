@@ -1,61 +1,60 @@
+"""
+MiniLang — punto de entrada principal.
+Uso: python minilang.py <archivo.mlng>
+"""
+
 import sys
 import os
+
+# Forzar UTF-8 en la consola de Windows para mostrar tildes y caracteres especiales
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 from pathlib import Path
 
-# Agregar ruta de FASE_2
+# Agregar FASE_2 al path para importar el orquestador
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'FASE_2'))
 
 from minilang_fase2 import compilar_archivo
 
 
 def main():
-    """Función principal"""
-    print("=" * 60)
-    print("MiniLang Compilador - Fase 2: Análisis Sintáctico")
-    print("=" * 60)
-
-    # Si se pasa archivo como argumento, usarlo
+    """Función principal: pide el archivo si no se pasa como argumento."""
+    # Si se pasa archivo como argumento, usarlo directamente
     if len(sys.argv) >= 2:
         archivo = sys.argv[1]
     else:
-        # Si no, pedir al usuario que lo ingrese
-        print("\nArchivos disponibles:")
-        directorio = Path(os.path.dirname(__file__))
-        archivos_mlng = list(directorio.glob("*.mlng"))
+        # Buscar archivos .mlng disponibles para orientar al usuario
+        directorio = Path(os.path.dirname(os.path.abspath(__file__)))
+        archivos = sorted(directorio.rglob('*.mlng'))
 
-        if archivos_mlng:
-            for i, f in enumerate(archivos_mlng, 1):
-                print(f"  {i}. {f.name}")
+        if archivos:
+            print("Archivos .mlng disponibles:")
+            for f in archivos:
+                print(f"  {f.relative_to(directorio)}")
+            print()
 
-        print("\nIngresa el nombre del archivo .mlng a compilar")
-        print("(o la ruta completa si está en otra carpeta):")
+        print("Ingresa la ruta del archivo .mlng a compilar:")
         archivo = input("> ").strip()
 
         if not archivo:
-            print("Error: Debes ingresar un archivo.")
+            print("Error: debes ingresar un archivo.")
             sys.exit(1)
 
-    # Verificar que el archivo exista
+    # Resolver la ruta
     ruta = Path(archivo)
+    if not ruta.is_absolute():
+        # Intentar relativo al directorio del script
+        alt = Path(os.path.dirname(os.path.abspath(__file__))) / archivo
+        if alt.exists():
+            ruta = alt
 
-    # Si la ruta no existe, intentar buscarla en el directorio del script
     if not ruta.exists():
-        ruta_script = Path(os.path.dirname(__file__)) / archivo
-        if ruta_script.exists():
-            ruta = ruta_script
-        else:
-            print(f"Error: El archivo '{archivo}' no existe.")
-            print(f"  Buscado en directorio actual: {Path(archivo).resolve()}")
-            print(f"  Buscado en directorio del script: {ruta_script}")
-            sys.exit(1)
+        print(f"Error: el archivo '{archivo}' no existe.")
+        sys.exit(1)
 
-    if ruta.suffix.lower() != '.mlng':
-        print(f"Advertencia: se esperaba extensión .mlng, pero se recibió '{ruta.suffix}'")
-
-    print()
-    # Ejecutar compilación
-    exit_code = compilar_archivo(str(ruta))
-    sys.exit(exit_code)
+    sys.exit(compilar_archivo(str(ruta)))
 
 
 if __name__ == "__main__":

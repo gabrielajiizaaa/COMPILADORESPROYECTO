@@ -30,7 +30,4 @@ build/
 ~*
 
 # Test files y salida
-*.mlng
 *.out
-README.md
-READM.md

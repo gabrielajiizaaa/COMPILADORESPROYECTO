@@ -11,12 +11,10 @@ from typing import List, Tuple
 import ply.yacc as yacc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'FASE_1'))
-from analizador_lexico import AnalizadorLexico, TipoToken, Token
+from analizador_lexico import TipoToken, Token
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # ADAPTADOR: convierte los Token de Fase 1 al formato que PLY espera
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 # Mapa de TipoToken (enum de Fase 1) → nombre de terminal PLY (cadena)
 _MAPA: dict = {

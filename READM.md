@@ -3,6 +3,11 @@ MiniLango - FASE 1 - ANALISIS LEXICO :D
 GABRIEL ALEJANDRO AJIN IZAGUIRRE - 1184924
 DIEGO ALEJANDRO SOTO MEJIA - 1044424
 
+EL PROGRAMA TIENE LA LIBRERIA PLY, POR LO QUE ANTES DE EJECUTAR EL PROGRAMA, COLOQUE EN LA TERMINAL
+
+pip install plY
+
+Y LUEGO EJECUTE EL ARCHIVO minilang.py 
 
 ## Expresiones Regulares
 Estas son las reglas que definen cómo se ven cada tipo de token en MiniLang.

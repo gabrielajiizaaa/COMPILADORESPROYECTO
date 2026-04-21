@@ -68,7 +68,7 @@ _LOGICOS: dict = {'or': 'OR', 'and': 'AND', 'not': 'NOT'}
 
 
 class _TokenPLY:
-    """Objeto token mínimo compatible con PLY yacc."""
+    # Objeto token mínimo compatible con PLY yacc.
     # Sin __slots__: PLY necesita agregar atributos internos como 'lexer' en recovery
 
     def __init__(self, tipo: str, valor, linea: int, col: int):
@@ -80,10 +80,8 @@ class _TokenPLY:
 
 
 class AdaptadorLexer:
-    """
-    Envuelve la lista de tokens de Fase 1 y los expone con la interfaz
-    que PLY yacc espera: método token() que devuelve None al terminar.
-    """
+    # Envuelve la lista de tokens de Fase 1 y los expone con la interfaz
+    # que PLY yacc espera: método token() que devuelve None al terminar.
 
     def __init__(self, tokens_lista: List[Token]):
         self._tokens = tokens_lista
@@ -91,7 +89,7 @@ class AdaptadorLexer:
         self.lineno  = 1   # PLY lo consulta para rastrear líneas
 
     def token(self):
-        """Devuelve el siguiente token compatible con PLY, o None si terminó."""
+        # Devuelve el siguiente token compatible con PLY, o None si terminó.
         while self._pos < len(self._tokens):
             tok = self._tokens[self._pos]
             self._pos += 1
@@ -120,13 +118,11 @@ class AdaptadorLexer:
         return None
 
     def input(self, _data):
-        """Interfaz que PLY requiere; no se usa porque ya tenemos los tokens."""
+        # Interfaz que PLY requiere; no se usa porque ya tenemos los tokens.
         pass
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # TERMINALES Y PRECEDENCIA
-# ─────────────────────────────────────────────────────────────────────────────
 
 tokens = (
     'NENTERO', 'NFLOAT', 'CADENA', 'ID',
@@ -157,17 +153,15 @@ precedence = (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # REGLAS GRAMATICALES
-# ─────────────────────────────────────────────────────────────────────────────
 
-# ── Programa ──────────────────────────────────────────────────────────────────
+#Programa 
 
 def p_programa(p):
     """programa : sentencias"""
     p[0] = ('programa', p[1])
 
-# ── Lista de sentencias ────────────────────────────────────────────────────────
+#Lista de sentencias
 
 def p_sentencias_varias(p):
     """sentencias : sentencias sentencia"""
@@ -177,7 +171,7 @@ def p_sentencias_una(p):
     """sentencias : sentencia"""
     p[0] = [p[1]] if p[1] is not None else []
 
-# ── Sentencias individuales ────────────────────────────────────────────────────
+#Sentencias individuales
 
 def p_sentencia_vacia(p):
     """sentencia : NUEVA_LINEA"""
@@ -230,7 +224,7 @@ def p_sentencia_error(p):
     # Recuperación: al encontrar un error, PLY descarta tokens hasta NUEVA_LINEA
     p[0] = None
 
-# ── Declaración de variable ────────────────────────────────────────────────────
+# Declaración de variable
 
 def p_decl_simple(p):
     """decl_variable : tipo ID"""
@@ -247,7 +241,7 @@ def p_tipo(p):
             | TIPO_CADENA"""
     p[0] = p[1]
 
-# ── Asignación ────────────────────────────────────────────────────────────────
+#Asignación
 
 def p_asignacion(p):
     """asignacion : ID ASIGNAR     expr
@@ -257,7 +251,7 @@ def p_asignacion(p):
                   | ID DIV_IGUAL   expr"""
     p[0] = ('asig', p[1], p[2], p[3])
 
-# ── Bloque indentado ──────────────────────────────────────────────────────────
+#Bloque indentado
 
 def p_bloque(p):
     """bloque : INDENTAR sentencias DESINDENTAR"""
@@ -268,7 +262,7 @@ def p_bloque_error(p):
     # Recuperación dentro de un bloque mal formado
     p[0] = ('bloque', [])
 
-# ── If / else ─────────────────────────────────────────────────────────────────
+#If / else
 
 def p_sent_if(p):
     """sent_if : SI expr DOS_PUNTOS NUEVA_LINEA bloque"""
@@ -278,19 +272,19 @@ def p_sent_if_else(p):
     """sent_if : SI expr DOS_PUNTOS NUEVA_LINEA bloque SINO DOS_PUNTOS NUEVA_LINEA bloque"""
     p[0] = ('if', p[2], p[5], p[9])
 
-# ── While ─────────────────────────────────────────────────────────────────────
+#While
 
 def p_sent_while(p):
     """sent_while : MIENTRAS expr DOS_PUNTOS NUEVA_LINEA bloque"""
     p[0] = ('while', p[2], p[5])
 
-# ── Definición de función ─────────────────────────────────────────────────────
+#Definición de función
 
 def p_sent_func(p):
     """sent_func : FUNCION ID PAR_IZQ params PAR_DER DOS_PUNTOS NUEVA_LINEA bloque"""
     p[0] = ('func', p[2], p[4], p[8])
 
-# ── Parámetros formales ────────────────────────────────────────────────────────
+#Parámetros formales
 
 def p_params_vacio(p):
     """params : """
@@ -304,7 +298,7 @@ def p_params_mult(p):
     """params : params COMA tipo ID"""
     p[0] = p[1] + [(p[3], p[4])]
 
-# ── Argumentos de llamada ─────────────────────────────────────────────────────
+#Argumentos de llamada
 
 def p_args_vacio(p):
     """args : """
@@ -318,7 +312,7 @@ def p_args_mult(p):
     """args : args COMA expr"""
     p[0] = p[1] + [p[3]]
 
-# ── Expresiones ───────────────────────────────────────────────────────────────
+#Expresiones
 
 def p_expr_binaria(p):
     """expr : expr OR          expr
@@ -380,14 +374,12 @@ def p_expr_false(p):
     p[0] = ('bool', False)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # MANEJO Y RECUPERACIÓN DE ERRORES SINTÁCTICOS
-# ─────────────────────────────────────────────────────────────────────────────
 
 _errores: List[str] = []
 
 def p_error(p):
-    """Reportar el error sintáctico. PLY usa las reglas 'error' para recuperarse."""
+    # Reportar el error sintáctico. PLY usa las reglas 'error' para recuperarse.
     global _errores
 
     if p is None:
@@ -406,9 +398,7 @@ def p_error(p):
     # 'sentencia : error NUEVA_LINEA' o 'bloque : INDENTAR error DESINDENTAR'
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CONSTRUCCIÓN DEL PARSER
-# ─────────────────────────────────────────────────────────────────────────────
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -421,23 +411,19 @@ parser = yacc.yacc(
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # FUNCIÓN PÚBLICA
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_program(tokens_lista: List[Token],
                   errores_lexicos: List[str]) -> Tuple[bool, List[str]]:
-    """
-    Analizar sintácticamente la lista de tokens producida por Fase 1.
-
-    Parámetros:
-        tokens_lista   : lista de Token devuelta por AnalizadorLexico.tokenizar()
-        errores_lexicos: lista de strings de error del lexer (Fase 1)
-
-    Retorna:
-        (exito, todos_los_errores)
-        exito=True solo cuando no hay ningún error léxico ni sintáctico.
-    """
+    # Analizar sintácticamente la lista de tokens producida por Fase 1.
+    #
+    # Parámetros:
+    #     tokens_lista   : lista de Token devuelta por AnalizadorLexico.tokenizar()
+    #     errores_lexicos: lista de strings de error del lexer (Fase 1)
+    #
+    # Retorna:
+    #     (exito, todos_los_errores)
+    #     exito=True solo cuando no hay ningún error léxico ni sintáctico.
     global _errores
     _errores = []
 

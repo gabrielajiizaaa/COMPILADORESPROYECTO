@@ -13,10 +13,10 @@ if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 from pathlib import Path
 
-# Agregar FASE_2 al path para importar el orquestador
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'FASE_2'))
+# Agregar FASE_3 al path para importar el orquestador
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'FASE_3'))
 
-from minilang_fase2 import compilar_archivo
+from minilang_fase3 import compilar_archivo_fase3
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
         print(f"Error: el archivo '{archivo}' no existe.")
         sys.exit(1)
 
-    sys.exit(compilar_archivo(str(ruta)))
+    sys.exit(compilar_archivo_fase3(str(ruta)))
 
 
 if __name__ == "__main__":

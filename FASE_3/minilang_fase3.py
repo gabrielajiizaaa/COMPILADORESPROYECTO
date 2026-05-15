@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(_BASE, '..', 'FASE_2'))
 sys.path.insert(0, _BASE)
 
 from analizador_lexico import AnalizadorLexico
-import analizador_sintactico as sint
+import analizador_sintactico as sint  # type: ignore[reportMissingImports]
 from analizador_semantico import AnalizadorSemantico
 
 

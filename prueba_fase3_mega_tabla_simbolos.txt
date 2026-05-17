@@ -1,0 +1,71 @@
+TABLA DE SIMBOLOS - FASE 3
+Archivo analizado: prueba_fase3_mega.mlng
+
+categoria | nombre | tipo | ambito | valor | detalle
+------------------------------------------------------------------------
+variable | limite | int | 1 | - | fuera de ambito
+variable | paso | int | 1 | - | fuera de ambito
+variable | i | int | 1 | - | fuera de ambito
+variable | acum | int | 1 | 0 | fuera de ambito
+variable | seguir | bool | 1 | - | fuera de ambito
+variable | base | string | 1 | - | fuera de ambito
+variable | n | int | 1 | - | fuera de ambito
+variable | i | int | 1 | 1 | fuera de ambito
+variable | msg | string | 1 | - | fuera de ambito
+variable | continuar | bool | 1 | - | fuera de ambito
+variable | a | int | 1 | - | fuera de ambito
+variable | b | int | 1 | - | fuera de ambito
+variable | c | int | 1 | - | fuera de ambito
+variable | r1 | bool | 1 | - | fuera de ambito
+variable | r2 | bool | 1 | - | fuera de ambito
+variable | r3 | bool | 1 | - | fuera de ambito
+variable | base | int | 1 | - | fuera de ambito
+variable | exponente | int | 1 | - | fuera de ambito
+variable | i | int | 1 | 1 | fuera de ambito
+variable | res | int | 1 | 1 | fuera de ambito
+variable | seguir | bool | 1 | - | fuera de ambito
+variable | a | bool | 1 | - | fuera de ambito
+variable | b | bool | 1 | - | fuera de ambito
+variable | c | bool | 1 | - | fuera de ambito
+variable | t1 | bool | 1 | - | fuera de ambito
+variable | t2 | bool | 1 | - | fuera de ambito
+variable | t3 | bool | 1 | - | fuera de ambito
+variable | a | int | 0 | 90 | activa
+variable | b | int | 0 | 25 | activa
+variable | c | int | 0 | 7.0 | activa
+variable | d | int | 0 | 3.0 | activa
+variable | e | int | 0 | 2 | activa
+variable | f | int | 0 | 9 | activa
+variable | g | int | 0 | 11 | activa
+variable | h | int | 0 | 13 | activa
+variable | i | int | 0 | 0 | activa
+variable | j | int | 0 | 1 | activa
+variable | x | float | 0 | 12.5 | activa
+variable | y | float | 0 | 9.5 | activa
+variable | z | float | 0 | 1.3157894736842106 | activa
+variable | cond1 | bool | 0 | True | activa
+variable | cond2 | bool | 0 | False | activa
+variable | cond3 | bool | 0 | True | activa
+variable | cond4 | bool | 0 | True | activa
+variable | s1 | string | 0 | A | activa
+variable | s2 | string | 0 | B | activa
+variable | s3 | string | 0 | - | activa
+variable | s4 | string | 0 | A-B | activa
+variable | seguir1 | bool | 0 | True | activa
+variable | k | int | 0 | 1 | activa
+variable | m | int | 0 | 1 | activa
+variable | n | int | 0 | 20 | activa
+variable | seguir2 | bool | 0 | True | activa
+variable | p | int | 0 | 17 | activa
+variable | q | int | 0 | 5 | activa
+variable | r | int | 0 | 25 | activa
+variable | t | int | 0 | 48 | activa
+variable | u | int | 0 | 2 | activa
+variable | v | int | 0 | 50 | activa
+variable | seguir3 | bool | 0 | True | activa
+variable | etiqueta | string | 0 | final | activa
+funcion | procesarEnteros | func | 0 | - | params: (int limite, int paso)
+funcion | construirMensaje | func | 0 | - | params: (string base, int n)
+funcion | evaluarRangos | func | 0 | - | params: (int a, int b, int c)
+funcion | calcularPotencias | func | 0 | - | params: (int base, int exponente)
+funcion | chequeoLogico | func | 0 | - | params: (bool a, bool b, bool c)

@@ -20,6 +20,7 @@ class CompiladoresFase3:
         self.tokens_lista = []
         self.errores_lex = []
         self.arbol = None
+        self.archivo_tabla = None
 
     def validar_entrada(self) -> bool:
         if not self.archivo_path.exists():
@@ -69,6 +70,7 @@ class CompiladoresFase3:
     def ejecutar_fase3(self):
         semantico = AnalizadorSemantico()
         errores_sem = semantico.analizar(self.arbol)
+        self.archivo_tabla = semantico.generar_archivo_tabla(str(self.archivo_path))
         return (len(errores_sem) == 0), errores_sem
 
     def compilar(self) -> bool:
@@ -89,9 +91,13 @@ class CompiladoresFase3:
         if not exito_sem:
             for err in errores_sem:
                 print(err)
+            if self.archivo_tabla:
+                print(f"Tabla de simbolos generada en: {self.archivo_tabla}")
             return False
 
         print("OK")
+        if self.archivo_tabla:
+            print(f"Tabla de simbolos generada en: {self.archivo_tabla}")
         return True
 
 

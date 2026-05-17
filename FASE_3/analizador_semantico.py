@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 
@@ -17,6 +18,7 @@ class FuncionInfo:
 class TablaSimbolos:
     def __init__(self):
         self._ambitos: List[Dict[str, SimboloInfo]] = [{}]
+        self._historial: List[Dict[str, Any]] = []
 
     def entrar_ambito(self):
         self._ambitos.append({})
@@ -29,7 +31,13 @@ class TablaSimbolos:
         ambito = self._ambitos[-1]
         if nombre in ambito:
             return False
-        ambito[nombre] = SimboloInfo(tipo=tipo, valor=valor)
+        info = SimboloInfo(tipo=tipo, valor=valor)
+        ambito[nombre] = info
+        self._historial.append({
+            'nombre': nombre,
+            'ambito': len(self._ambitos) - 1,
+            'info': info,
+        })
         return True
 
     def actualizar_valor(self, nombre: str, valor: Any):
@@ -53,17 +61,25 @@ class TablaSimbolos:
         return None
 
     def obtener_todos(self) -> List[Dict]:
-        """Devuelve todos los símbolos de todos los ámbitos para exportar."""
+        """Devuelve todos los símbolos declarados (histórico completo)."""
         resultado = []
-        for nivel, ambito in enumerate(self._ambitos):
-            for nombre, info in ambito.items():
-                resultado.append({
-                    'nombre': nombre,
-                    'tipo': info.tipo,
-                    'valor': info.valor,
-                    'ambito': nivel,
-                })
+        for item in self._historial:
+            info = item['info']
+            resultado.append({
+                'nombre': item['nombre'],
+                'tipo': info.tipo,
+                'valor': info.valor,
+                'ambito': item['ambito'],
+                'activo': self._simbolo_activo(info),
+            })
         return resultado
+
+    def _simbolo_activo(self, info_obj: SimboloInfo) -> bool:
+        for ambito in self._ambitos:
+            for info in ambito.values():
+                if info is info_obj:
+                    return True
+        return False
 
 
 class AnalizadorSemantico:
@@ -81,6 +97,59 @@ class AnalizadorSemantico:
         for sentencia in arbol[1]:
             self._analizar_sentencia(sentencia)
         return self.errores
+
+    def obtener_tabla_completa(self) -> List[Dict[str, Any]]:
+        filas: List[Dict[str, Any]] = []
+
+        for var in self.variables.obtener_todos():
+            filas.append({
+                'categoria': 'variable',
+                'nombre': var['nombre'],
+                'tipo': var['tipo'],
+                'ambito': var['ambito'],
+                'valor': var['valor'],
+                'detalle': 'activa' if var.get('activo') else 'fuera de ambito',
+            })
+
+        for fun in self.funciones.values():
+            firma = ', '.join([f"{t} {n}" for t, n in fun.parametros])
+            filas.append({
+                'categoria': 'funcion',
+                'nombre': fun.nombre,
+                'tipo': 'func',
+                'ambito': 0,
+                'valor': '-',
+                'detalle': f"params: ({firma})",
+            })
+
+        return filas
+
+    def generar_archivo_tabla(self, archivo_fuente: str) -> str:
+        src = Path(archivo_fuente)
+        salida = src.with_name(f"{src.stem}_tabla_simbolos.txt")
+
+        filas = self.obtener_tabla_completa()
+
+        with open(salida, 'w', encoding='utf-8') as f:
+            f.write("TABLA DE SIMBOLOS - FASE 3\n")
+            f.write(f"Archivo analizado: {src.name}\n")
+            f.write("\n")
+            f.write("categoria | nombre | tipo | ambito | valor | detalle\n")
+            f.write("-" * 72 + "\n")
+
+            if not filas:
+                f.write("(sin simbolos)\n")
+            else:
+                for fila in filas:
+                    valor = fila['valor']
+                    valor_txt = '-' if valor is None else str(valor)
+                    linea = (
+                        f"{fila['categoria']} | {fila['nombre']} | {fila['tipo']} | "
+                        f"{fila['ambito']} | {valor_txt} | {fila['detalle']}\n"
+                    )
+                    f.write(linea)
+
+        return str(salida)
 
     def _analizar_sentencia(self, sentencia):
         if sentencia is None:

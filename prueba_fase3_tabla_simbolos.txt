@@ -1,0 +1,14 @@
+TABLA DE SIMBOLOS - FASE 3
+Archivo analizado: prueba_fase3.mlng
+
+categoria | nombre | tipo | ambito | valor | detalle
+------------------------------------------------------------------------
+variable | x | int | 1 | - | fuera de ambito
+variable | y | int | 1 | - | fuera de ambito
+variable | r | int | 1 | - | fuera de ambito
+variable | a | int | 0 | 9 | activa
+variable | b | int | 0 | 5 | activa
+variable | c | int | 0 | 15 | activa
+variable | bandera | bool | 0 | True | activa
+variable | texto | string | 0 | ok | activa
+funcion | suma | func | 0 | - | params: (int x, int y)

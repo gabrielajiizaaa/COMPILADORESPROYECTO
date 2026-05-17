@@ -200,24 +200,34 @@ def p_sentencia_func(p):
 
 def p_sentencia_return_valor(p):
     """sentencia : RETORNAR expr NUEVA_LINEA"""
-    p[0] = ('return', p[2])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('return', p[2], linea, col)
 
 def p_sentencia_return_vacio(p):
     """sentencia : RETORNAR NUEVA_LINEA"""
-    p[0] = ('return', None)
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('return', None, linea, col)
 
 def p_sentencia_write(p):
     """sentencia : ESCRIBIR PAR_IZQ expr PAR_DER NUEVA_LINEA"""
-    p[0] = ('write', p[3])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('write', p[3], linea, col)
 
 def p_sentencia_read(p):
     """sentencia : LEER PAR_IZQ ID PAR_DER NUEVA_LINEA"""
-    p[0] = ('read', p[3])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('read', p[3], linea, col)
 
 def p_sentencia_llamada(p):
     """sentencia : ID PAR_IZQ args PAR_DER NUEVA_LINEA"""
     # Llamada a función usada como sentencia (descarta el valor de retorno)
-    p[0] = ('call_stmt', p[1], p[3])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('call_stmt', p[1], p[3], linea, col)
 
 def p_sentencia_error(p):
     """sentencia : error NUEVA_LINEA"""
@@ -228,11 +238,15 @@ def p_sentencia_error(p):
 
 def p_decl_simple(p):
     """decl_variable : tipo ID"""
-    p[0] = ('decl', p[1], p[2], None)
+    linea = p.lineno(2)
+    col   = getattr(p.slice[2], 'col', 0)
+    p[0] = ('decl', p[1], p[2], None, linea, col)
 
 def p_decl_con_asig(p):
     """decl_variable : tipo ID ASIGNAR expr"""
-    p[0] = ('decl', p[1], p[2], p[4])
+    linea = p.lineno(2)
+    col   = getattr(p.slice[2], 'col', 0)
+    p[0] = ('decl', p[1], p[2], p[4], linea, col)
 
 def p_tipo(p):
     """tipo : TIPO_ENTERO
@@ -249,7 +263,9 @@ def p_asignacion(p):
                   | ID MENOS_IGUAL expr
                   | ID MULT_IGUAL  expr
                   | ID DIV_IGUAL   expr"""
-    p[0] = ('asig', p[1], p[2], p[3])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('asig', p[1], p[2], p[3], linea, col)
 
 #Bloque indentado
 
@@ -266,23 +282,31 @@ def p_bloque_error(p):
 
 def p_sent_if(p):
     """sent_if : SI expr DOS_PUNTOS NUEVA_LINEA bloque"""
-    p[0] = ('if', p[2], p[5], None)
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('if', p[2], p[5], None, linea, col)
 
 def p_sent_if_else(p):
     """sent_if : SI expr DOS_PUNTOS NUEVA_LINEA bloque SINO DOS_PUNTOS NUEVA_LINEA bloque"""
-    p[0] = ('if', p[2], p[5], p[9])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('if', p[2], p[5], p[9], linea, col)
 
 #While
 
 def p_sent_while(p):
     """sent_while : MIENTRAS expr DOS_PUNTOS NUEVA_LINEA bloque"""
-    p[0] = ('while', p[2], p[5])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('while', p[2], p[5], linea, col)
 
 #Definición de función
 
 def p_sent_func(p):
     """sent_func : FUNCION ID PAR_IZQ params PAR_DER DOS_PUNTOS NUEVA_LINEA bloque"""
-    p[0] = ('func', p[2], p[4], p[8])
+    linea = p.lineno(2)
+    col   = getattr(p.slice[2], 'col', 0)
+    p[0] = ('func', p[2], p[4], p[8], linea, col)
 
 #Parámetros formales
 
@@ -330,16 +354,22 @@ def p_expr_binaria(p):
             | expr MODULO      expr
             | expr DIV_ENTERA  expr
             | expr POTENCIA    expr"""
-    p[0] = ('binop', p[2], p[1], p[3])
+    linea = p.lineno(2)
+    col   = getattr(p.slice[2], 'col', 0)
+    p[0] = ('binop', p[2], p[1], p[3], linea, col)
 
 def p_expr_not(p):
     """expr : NOT expr"""
-    p[0] = ('unop', 'not', p[2])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('unop', 'not', p[2], linea, col)
 
 def p_expr_umenos(p):
     """expr : MENOS expr %prec UMENOS"""
     # %prec UMENOS le da mayor precedencia que el MENOS binario
-    p[0] = ('unop', '-', p[2])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('unop', '-', p[2], linea, col)
 
 def p_expr_paren(p):
     """expr : PAR_IZQ expr PAR_DER"""
@@ -347,11 +377,15 @@ def p_expr_paren(p):
 
 def p_expr_llamada(p):
     """expr : ID PAR_IZQ args PAR_DER"""
-    p[0] = ('call', p[1], p[3])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('call', p[1], p[3], linea, col)
 
 def p_expr_id(p):
     """expr : ID"""
-    p[0] = ('id', p[1])
+    linea = p.lineno(1)
+    col   = getattr(p.slice[1], 'col', 0)
+    p[0] = ('id', p[1], linea, col)
 
 def p_expr_entero(p):
     """expr : NENTERO"""

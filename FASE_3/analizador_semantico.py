@@ -1,5 +1,11 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple, Any
+
+
+@dataclass
+class SimboloInfo:
+    tipo: str
+    valor: Any = None
 
 
 @dataclass
@@ -10,7 +16,7 @@ class FuncionInfo:
 
 class TablaSimbolos:
     def __init__(self):
-        self._ambitos: List[Dict[str, str]] = [{}]
+        self._ambitos: List[Dict[str, SimboloInfo]] = [{}]
 
     def entrar_ambito(self):
         self._ambitos.append({})
@@ -19,18 +25,45 @@ class TablaSimbolos:
         if len(self._ambitos) > 1:
             self._ambitos.pop()
 
-    def declarar(self, nombre: str, tipo: str) -> bool:
+    def declarar(self, nombre: str, tipo: str, valor: Any = None) -> bool:
         ambito = self._ambitos[-1]
         if nombre in ambito:
             return False
-        ambito[nombre] = tipo
+        ambito[nombre] = SimboloInfo(tipo=tipo, valor=valor)
         return True
 
+    def actualizar_valor(self, nombre: str, valor: Any):
+        for ambito in reversed(self._ambitos):
+            if nombre in ambito:
+                ambito[nombre].valor = valor
+                return
+
     def buscar(self, nombre: str) -> Optional[str]:
+        """Devuelve solo el tipo (retrocompatibilidad)."""
+        for ambito in reversed(self._ambitos):
+            if nombre in ambito:
+                return ambito[nombre].tipo
+        return None
+
+    def buscar_info(self, nombre: str) -> Optional[SimboloInfo]:
+        """Devuelve el SimboloInfo completo (tipo + valor)."""
         for ambito in reversed(self._ambitos):
             if nombre in ambito:
                 return ambito[nombre]
         return None
+
+    def obtener_todos(self) -> List[Dict]:
+        """Devuelve todos los símbolos de todos los ámbitos para exportar."""
+        resultado = []
+        for nivel, ambito in enumerate(self._ambitos):
+            for nombre, info in ambito.items():
+                resultado.append({
+                    'nombre': nombre,
+                    'tipo': info.tipo,
+                    'valor': info.valor,
+                    'ambito': nivel,
+                })
+        return resultado
 
 
 class AnalizadorSemantico:
@@ -100,6 +133,10 @@ class AnalizadorSemantico:
                 self.errores.append(
                     f"Asignacion incompatible en declaracion de '{nombre}': {tipo_decl} <- {tipo_expr}"
                 )
+            else:
+                valor = self._evaluar_expr(expr)
+                if valor is not None:
+                    self.variables.actualizar_valor(nombre, valor)
 
     def _analizar_asignacion(self, sentencia):
         _, nombre, operador, expr = sentencia
@@ -114,6 +151,10 @@ class AnalizadorSemantico:
                 self.errores.append(
                     f"Asignacion incompatible en '{nombre}': {tipo_var} <- {tipo_expr}"
                 )
+            else:
+                valor = self._evaluar_expr(expr)
+                if valor is not None:
+                    self.variables.actualizar_valor(nombre, valor)
             return
 
         if operador in ('+=', '-=', '*=', '/='):
@@ -121,6 +162,20 @@ class AnalizadorSemantico:
                 self.errores.append(
                     f"Operador {operador} requiere tipos numericos en '{nombre}'"
                 )
+            else:
+                valor_actual = self.variables.buscar_info(nombre).valor
+                valor_expr = self._evaluar_expr(expr)
+                if valor_actual is not None and valor_expr is not None:
+                    if operador == '+=':
+                        nuevo = valor_actual + valor_expr
+                    elif operador == '-=':
+                        nuevo = valor_actual - valor_expr
+                    elif operador == '*=':
+                        nuevo = valor_actual * valor_expr
+                    elif operador == '/=':
+                        nuevo = valor_actual / valor_expr if valor_expr != 0 else None
+                    if nuevo is not None:
+                        self.variables.actualizar_valor(nombre, nuevo)
 
     def _analizar_if(self, sentencia):
         _, condicion, bloque_then, bloque_else = sentencia
@@ -277,6 +332,81 @@ class AnalizadorSemantico:
 
         self.errores.append(f"Nodo de expresion no soportado: {tag}")
         return 'error'
+
+    def _evaluar_expr(self, expr) -> Any:
+        """Evalúa el valor real de una expresión en tiempo de compilación.
+        Devuelve None si el valor no puede determinarse (p.ej. read, llamadas a función)."""
+        if expr is None:
+            return None
+
+        tag = expr[0]
+
+        if tag == 'int':
+            return int(expr[1])
+        if tag == 'float':
+            return float(expr[1])
+        if tag == 'str':
+            return str(expr[1])
+        if tag == 'bool':
+            return bool(expr[1])
+
+        if tag == 'id':
+            info = self.variables.buscar_info(expr[1])
+            return info.valor if info else None
+
+        if tag == 'unop':
+            op = expr[1]
+            val = self._evaluar_expr(expr[2])
+            if val is None:
+                return None
+            if op == '-':
+                return -val
+            if op == 'not':
+                return not val
+            return None
+
+        if tag == 'binop':
+            op = expr[1]
+            izq = self._evaluar_expr(expr[2])
+            der = self._evaluar_expr(expr[3])
+            if izq is None or der is None:
+                return None
+            try:
+                if op == '+':
+                    return izq + der
+                if op == '-':
+                    return izq - der
+                if op == '*':
+                    return izq * der
+                if op == '/':
+                    return float(izq) / float(der) if der != 0 else None
+                if op == '//':
+                    return izq // der if der != 0 else None
+                if op == '%':
+                    return izq % der if der != 0 else None
+                if op == '**':
+                    return izq ** der
+                if op == '==':
+                    return izq == der
+                if op == '!=':
+                    return izq != der
+                if op == '<':
+                    return izq < der
+                if op == '>':
+                    return izq > der
+                if op == '<=':
+                    return izq <= der
+                if op == '>=':
+                    return izq >= der
+                if op == 'and':
+                    return izq and der
+                if op == 'or':
+                    return izq or der
+            except Exception:
+                return None
+
+        # call, read y otros nodos no se pueden evaluar en compilación
+        return None
 
     @staticmethod
     def _tipos_compatibles(destino: str, origen: str) -> bool:

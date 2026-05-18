@@ -88,6 +88,21 @@ class AnalizadorSemantico:
         self.variables = TablaSimbolos()
         self.funciones: Dict[str, FuncionInfo] = {}
         self._funcion_actual: Optional[str] = None
+        self._pos_actual: Tuple[int, int] = (0, 0)  # (linea, col) de la sentencia en curso
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
+
+    def _error(self, linea: int, col: int, mensaje: str):
+        """Registra un error con formato uniforme: linea X, col Y: ERROR <msg>"""
+        self.errores.append(f"linea {linea}, col {col}: ERROR {mensaje}")
+
+    @staticmethod
+    def _extraer_pos(nodo, idx_linea: int, idx_col: int) -> Tuple[int, int]:
+        """Extrae (linea, col) de un nodo AST por índice, o (0,0) si no existe."""
+        try:
+            return int(nodo[idx_linea]), int(nodo[idx_col])
+        except (IndexError, TypeError):
+            return (0, 0)
 
     def analizar(self, arbol) -> List[str]:
         if not arbol or arbol[0] != 'programa':
@@ -170,15 +185,25 @@ class AnalizadorSemantico:
         elif tipo == 'return':
             self._analizar_return(sentencia)
         elif tipo == 'write':
+            # ('write', expr, linea, col)
+            linea, col = self._extraer_pos(sentencia, 2, 3)
+            self._pos_actual = (linea, col)
             self._tipo_expr(sentencia[1])
         elif tipo == 'read':
+            # ('read', nombre, linea, col)
             nombre = sentencia[1]
+            linea, col = self._extraer_pos(sentencia, 2, 3)
+            self._pos_actual = (linea, col)
             if self.variables.buscar(nombre) is None:
-                self.errores.append(f"Variable no declarada en read: '{nombre}'")
+                self._error(linea, col, f"Variable no declarada en read: '{nombre}'")
         elif tipo == 'call_stmt':
-            self._tipo_expr(('call', sentencia[1], sentencia[2]))
+            # ('call_stmt', nombre, args, linea, col)
+            linea, col = self._extraer_pos(sentencia, 3, 4)
+            self._pos_actual = (linea, col)
+            self._tipo_expr(('call', sentencia[1], sentencia[2], linea, col))
         else:
-            self.errores.append(f"Sentencia no soportada en fase 3: {tipo}")
+            l, c = self._pos_actual
+            self._error(l, c, f"Sentencia no soportada en fase 3: {tipo}")
 
     def _analizar_bloque(self, bloque):
         if not bloque or bloque[0] != 'bloque':
@@ -191,15 +216,19 @@ class AnalizadorSemantico:
         self.variables.salir_ambito()
 
     def _analizar_declaracion(self, sentencia):
-        _, tipo_decl, nombre, expr = sentencia
+        # ('decl', tipo, nombre, expr, linea, col)
+        tipo_decl, nombre, expr = sentencia[1], sentencia[2], sentencia[3]
+        linea, col = self._extraer_pos(sentencia, 4, 5)
+        self._pos_actual = (linea, col)
+
         if not self.variables.declarar(nombre, tipo_decl):
-            self.errores.append(f"Variable redeclarada en el mismo ambito: '{nombre}'")
+            self._error(linea, col, f"Variable redeclarada en el mismo ambito: '{nombre}'")
             return
 
         if expr is not None:
             tipo_expr = self._tipo_expr(expr)
             if not self._tipos_compatibles(tipo_decl, tipo_expr):
-                self.errores.append(
+                self._error(linea, col,
                     f"Asignacion incompatible en declaracion de '{nombre}': {tipo_decl} <- {tipo_expr}"
                 )
             else:
@@ -208,16 +237,20 @@ class AnalizadorSemantico:
                     self.variables.actualizar_valor(nombre, valor)
 
     def _analizar_asignacion(self, sentencia):
-        _, nombre, operador, expr = sentencia
+        # ('asig', nombre, operador, expr, linea, col)
+        nombre, operador, expr = sentencia[1], sentencia[2], sentencia[3]
+        linea, col = self._extraer_pos(sentencia, 4, 5)
+        self._pos_actual = (linea, col)
+
         tipo_var = self.variables.buscar(nombre)
         if tipo_var is None:
-            self.errores.append(f"Variable no declarada: '{nombre}'")
+            self._error(linea, col, f"Variable no declarada: '{nombre}'")
             return
 
         tipo_expr = self._tipo_expr(expr)
         if operador == '=':
             if not self._tipos_compatibles(tipo_var, tipo_expr):
-                self.errores.append(
+                self._error(linea, col,
                     f"Asignacion incompatible en '{nombre}': {tipo_var} <- {tipo_expr}"
                 )
             else:
@@ -228,7 +261,7 @@ class AnalizadorSemantico:
 
         if operador in ('+=', '-=', '*=', '/='):
             if tipo_var not in ('int', 'float') or tipo_expr not in ('int', 'float'):
-                self.errores.append(
+                self._error(linea, col,
                     f"Operador {operador} requiere tipos numericos en '{nombre}'"
                 )
             else:
@@ -247,26 +280,38 @@ class AnalizadorSemantico:
                         self.variables.actualizar_valor(nombre, nuevo)
 
     def _analizar_if(self, sentencia):
-        _, condicion, bloque_then, bloque_else = sentencia
+        # ('if', condicion, bloque_then, bloque_else, linea, col)
+        condicion, bloque_then, bloque_else = sentencia[1], sentencia[2], sentencia[3]
+        linea, col = self._extraer_pos(sentencia, 4, 5)
+        self._pos_actual = (linea, col)
+
         tipo_cond = self._tipo_expr(condicion)
-        if tipo_cond != 'bool':
-            self.errores.append(f"Condicion de if debe ser bool, no {tipo_cond}")
+        if tipo_cond not in ('bool', 'any'):
+            self._error(linea, col, f"Condicion de if debe ser bool, no {tipo_cond}")
 
         self._analizar_bloque(bloque_then)
         if bloque_else is not None:
             self._analizar_bloque(bloque_else)
 
     def _analizar_while(self, sentencia):
-        _, condicion, bloque = sentencia
+        # ('while', condicion, bloque, linea, col)
+        condicion, bloque = sentencia[1], sentencia[2]
+        linea, col = self._extraer_pos(sentencia, 3, 4)
+        self._pos_actual = (linea, col)
+
         tipo_cond = self._tipo_expr(condicion)
-        if tipo_cond != 'bool':
-            self.errores.append(f"Condicion de while debe ser bool, no {tipo_cond}")
+        if tipo_cond not in ('bool', 'any'):
+            self._error(linea, col, f"Condicion de while debe ser bool, no {tipo_cond}")
         self._analizar_bloque(bloque)
 
     def _analizar_funcion(self, sentencia):
-        _, nombre, parametros, bloque = sentencia
+        # ('func', nombre, parametros, bloque, linea, col)
+        nombre, parametros, bloque = sentencia[1], sentencia[2], sentencia[3]
+        linea, col = self._extraer_pos(sentencia, 4, 5)
+        self._pos_actual = (linea, col)
+
         if nombre in self.funciones:
-            self.errores.append(f"Funcion redeclarada: '{nombre}'")
+            self._error(linea, col, f"Funcion redeclarada: '{nombre}'")
             return
 
         self.funciones[nombre] = FuncionInfo(nombre=nombre, parametros=parametros)
@@ -277,7 +322,7 @@ class AnalizadorSemantico:
         self.variables.entrar_ambito()
         for tipo_param, nombre_param in parametros:
             if not self.variables.declarar(nombre_param, tipo_param):
-                self.errores.append(
+                self._error(linea, col,
                     f"Parametro duplicado '{nombre_param}' en funcion '{nombre}'"
                 )
 
@@ -288,9 +333,13 @@ class AnalizadorSemantico:
         self._funcion_actual = anterior
 
     def _analizar_return(self, sentencia):
-        _, expr = sentencia
+        # ('return', expr, linea, col)
+        expr = sentencia[1]
+        linea, col = self._extraer_pos(sentencia, 2, 3)
+        self._pos_actual = (linea, col)
+
         if self._funcion_actual is None:
-            self.errores.append("return fuera de una funcion")
+            self._error(linea, col, "return fuera de una funcion")
             return
 
         if expr is not None:
@@ -312,60 +361,78 @@ class AnalizadorSemantico:
             return 'bool'
 
         if tag == 'id':
+            # ('id', nombre, linea, col)
             nombre = expr[1]
+            linea, col = self._extraer_pos(expr, 2, 3)
+            if linea == 0:
+                linea, col = self._pos_actual
             tipo_var = self.variables.buscar(nombre)
             if tipo_var is None:
-                self.errores.append(f"Variable no declarada: '{nombre}'")
+                self._error(linea, col, f"Variable no declarada: '{nombre}'")
                 return 'error'
             return tipo_var
 
         if tag == 'call':
+            # ('call', nombre, args, linea, col)
             nombre = expr[1]
-            args = expr[2]
+            args   = expr[2]
+            linea, col = self._extraer_pos(expr, 3, 4)
+            if linea == 0:
+                linea, col = self._pos_actual
             info = self.funciones.get(nombre)
             if info is None:
-                self.errores.append(f"Funcion no declarada: '{nombre}'")
+                self._error(linea, col, f"Funcion no declarada: '{nombre}'")
                 for arg in args:
                     self._tipo_expr(arg)
                 return 'error'
 
             if len(args) != len(info.parametros):
-                self.errores.append(
-                    f"Cantidad de argumentos invalida en '{nombre}': {len(args)} != {len(info.parametros)}"
+                self._error(linea, col,
+                    f"Cantidad de argumentos invalida en '{nombre}': "
+                    f"{len(args)} != {len(info.parametros)}"
                 )
             else:
                 for idx, arg in enumerate(args):
                     tipo_arg = self._tipo_expr(arg)
                     tipo_param = info.parametros[idx][0]
                     if not self._tipos_compatibles(tipo_param, tipo_arg):
-                        self.errores.append(
+                        self._error(linea, col,
                             f"Tipo de argumento invalido en '{nombre}' posicion {idx + 1}: "
                             f"{tipo_param} <- {tipo_arg}"
                         )
-
             return 'any'
 
         if tag == 'unop':
+            # ('unop', op, expr, linea, col)
             op = expr[1]
+            linea, col = self._extraer_pos(expr, 3, 4)
+            if linea == 0:
+                linea, col = self._pos_actual
             tipo_rhs = self._tipo_expr(expr[2])
 
             if op == '-':
                 if tipo_rhs not in ('int', 'float'):
-                    self.errores.append(f"Operador unario '-' requiere numerico, no {tipo_rhs}")
+                    self._error(linea, col,
+                        f"Operador unario '-' requiere numerico, no {tipo_rhs}")
                     return 'error'
                 return tipo_rhs
 
             if op == 'not':
                 if tipo_rhs != 'bool':
-                    self.errores.append(f"Operador 'not' requiere bool, no {tipo_rhs}")
+                    self._error(linea, col,
+                        f"Operador 'not' requiere bool, no {tipo_rhs}")
                     return 'error'
                 return 'bool'
 
-            self.errores.append(f"Operador unario no soportado: {op}")
+            self._error(linea, col, f"Operador unario no soportado: {op}")
             return 'error'
 
         if tag == 'binop':
+            # ('binop', op, izq, der, linea, col)
             op = expr[1]
+            linea, col = self._extraer_pos(expr, 4, 5)
+            if linea == 0:
+                linea, col = self._pos_actual
             izq = self._tipo_expr(expr[2])
             der = self._tipo_expr(expr[3])
 
@@ -373,8 +440,9 @@ class AnalizadorSemantico:
                 if op == '+' and izq == 'string' and der == 'string':
                     return 'string'
                 if izq not in ('int', 'float') or der not in ('int', 'float'):
-                    self.errores.append(
-                        f"Operador '{op}' requiere operandos numericos (o string+string), no {izq} y {der}"
+                    self._error(linea, col,
+                        f"Operador '{op}' requiere operandos numericos "
+                        f"(o string+string), no {izq} y {der}"
                     )
                     return 'error'
                 if op == '/':
@@ -383,23 +451,23 @@ class AnalizadorSemantico:
 
             if op in ('==', '!=', '<', '>', '<=', '>='):
                 if not self._comparables(izq, der):
-                    self.errores.append(
-                        f"Comparacion invalida entre tipos {izq} y {der}"
-                    )
+                    self._error(linea, col,
+                        f"Comparacion invalida entre tipos {izq} y {der}")
                 return 'bool'
 
             if op in ('and', 'or'):
                 if izq != 'bool' or der != 'bool':
-                    self.errores.append(
+                    self._error(linea, col,
                         f"Operador logico '{op}' requiere bool y bool, no {izq} y {der}"
                     )
                     return 'error'
                 return 'bool'
 
-            self.errores.append(f"Operador binario no soportado: {op}")
+            self._error(linea, col, f"Operador binario no soportado: {op}")
             return 'error'
 
-        self.errores.append(f"Nodo de expresion no soportado: {tag}")
+        l, c = self._pos_actual
+        self._error(l, c, f"Nodo de expresion no soportado: {tag}")
         return 'error'
 
     def _evaluar_expr(self, expr) -> Any:
@@ -424,6 +492,7 @@ class AnalizadorSemantico:
             return info.valor if info else None
 
         if tag == 'unop':
+            # ('unop', op, expr, linea, col)
             op = expr[1]
             val = self._evaluar_expr(expr[2])
             if val is None:
@@ -435,6 +504,7 @@ class AnalizadorSemantico:
             return None
 
         if tag == 'binop':
+            # ('binop', op, izq, der, linea, col)
             op = expr[1]
             izq = self._evaluar_expr(expr[2])
             der = self._evaluar_expr(expr[3])
@@ -479,6 +549,10 @@ class AnalizadorSemantico:
 
     @staticmethod
     def _tipos_compatibles(destino: str, origen: str) -> bool:
+        # 'any' es el tipo de retorno de funciones (tipo desconocido en compilacion)
+        # se acepta en cualquier contexto
+        if origen == 'any' or destino == 'any':
+            return True
         if destino == origen:
             return True
         if destino == 'float' and origen == 'int':
@@ -487,6 +561,8 @@ class AnalizadorSemantico:
 
     @staticmethod
     def _comparables(izq: str, der: str) -> bool:
+        if 'any' in (izq, der):
+            return True
         if izq == der:
             return True
         if izq in ('int', 'float') and der in ('int', 'float'):

@@ -286,7 +286,7 @@ class AnalizadorSemantico:
         self._pos_actual = (linea, col)
 
         tipo_cond = self._tipo_expr(condicion)
-        if tipo_cond != 'bool':
+        if tipo_cond not in ('bool', 'any'):
             self._error(linea, col, f"Condicion de if debe ser bool, no {tipo_cond}")
 
         self._analizar_bloque(bloque_then)
@@ -300,7 +300,7 @@ class AnalizadorSemantico:
         self._pos_actual = (linea, col)
 
         tipo_cond = self._tipo_expr(condicion)
-        if tipo_cond != 'bool':
+        if tipo_cond not in ('bool', 'any'):
             self._error(linea, col, f"Condicion de while debe ser bool, no {tipo_cond}")
         self._analizar_bloque(bloque)
 
@@ -549,6 +549,10 @@ class AnalizadorSemantico:
 
     @staticmethod
     def _tipos_compatibles(destino: str, origen: str) -> bool:
+        # 'any' es el tipo de retorno de funciones (tipo desconocido en compilacion)
+        # se acepta en cualquier contexto
+        if origen == 'any' or destino == 'any':
+            return True
         if destino == origen:
             return True
         if destino == 'float' and origen == 'int':
@@ -557,6 +561,8 @@ class AnalizadorSemantico:
 
     @staticmethod
     def _comparables(izq: str, der: str) -> bool:
+        if 'any' in (izq, der):
+            return True
         if izq == der:
             return True
         if izq in ('int', 'float') and der in ('int', 'float'):

@@ -331,12 +331,63 @@ Si hay errores, se imprimen todos los errores lexicos y sintacticos encontrados.
 - `FASE_2/parsetab.py`: tabla generada automaticamente por PLY.
 
 
+## FASE 3 - Analisis Semantico
+
+En la fase 3 se agrego el analizador semantico de MiniLang.
+Esta fase toma el arbol producido por la fase 2 y valida reglas semanticas del lenguaje, como tipos, declaraciones y uso correcto de funciones.
+
+### Que se implemento
+
+- **Tabla de simbolos con ambitos** para variables y funciones.
+- **Control de redeclaraciones** en el mismo ambito.
+- **Validacion de variables no declaradas** antes de usarlas.
+- **Comprobacion de tipos** en declaraciones, asignaciones y expresiones.
+- **Validacion de llamadas a funcion** (cantidad y tipos de argumentos).
+- **Verificacion de `return`** dentro de funciones.
+- **Reporte acumulado de errores semanticos** sin detener el analisis en el primer fallo.
+
+### Compatibilidad de tipos
+
+- Asignacion valida cuando el tipo origen y destino coinciden.
+- Conversion implicita permitida de `int` a `float`.
+- Operaciones invalidas entre tipos incompatibles se reportan como error semantico.
+
+### Tabla de simbolos en archivo de salida
+
+Para cumplir con el requisito del proyecto, la fase 3 genera automaticamente un archivo de salida con la tabla completa de simbolos.
+
+- Formato de salida: archivo `.txt`.
+- Nombre del archivo: `{nombre_fuente}_tabla_simbolos.txt`.
+- Contenido: categoria, nombre, tipo, ambito, valor y detalle (por ejemplo, parametros de funciones).
+
+Este archivo se genera tanto si el programa es correcto como si presenta errores semanticos.
+
+### Flujo completo del compilador
+
+El archivo `minilang.py` ejecuta el flujo completo:
+
+1. Analisis lexico (Fase 1)
+2. Analisis sintactico (Fase 2)
+3. Analisis semantico (Fase 3)
+
+Si no hay errores, la salida es:
+
+OK
+
+
+Si hay errores, se muestran todos los errores detectados (lexicos, sintacticos y/o semanticos) y aun asi se genera la tabla de simbolos.
+
+### Archivos principales de la fase 3
+
+- `FASE_3/analizador_semantico.py`: reglas semanticas, tabla de simbolos y generacion del archivo de tabla.
+- `FASE_3/minilang_fase3.py`: orquestador de las tres fases y punto de compilacion de fase 3.
+
+
 ## Pruebas
 
-prueba1_hola_mundo.mlng  ---- write con cadena de texto
+prueba1_hola_mundo.mlng ---- write con cadena de texto
 prueba2_aritmetica.mlng ---- declaracion de variables y expresiones aritmeticas
-prueba3_condicional.mlng ---- read, if/else, comparaciones e indentacion
-prueba4_funciones.mlng ---- funciones, parametros tipados, llamadas y return
-prueba5_while.mlng ---- variables, read/write y bucle while
-prueba_errores.mlng ---- recuperacion ante errores lexicos y sintacticos
-
+prueba3_input_if.mlng ---- read, if/else, comparaciones e indentacion
+prueba6_fallo_lexico.mlng ---- errores lexicos y recuperacion
+prueba7_fallo_sintactico.mlng ---- errores sintacticos y recuperacion
+prueba_general.mlng ---- prueba integral del lenguaje (tipos, control de flujo y funciones)

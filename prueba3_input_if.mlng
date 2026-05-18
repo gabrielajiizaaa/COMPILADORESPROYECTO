@@ -1,0 +1,14 @@
+# Prueba 3 - Input de datos y uso de if
+# Lee un numero del usuario y decide el flujo con if/else
+
+int numero
+bool es_positivo
+
+read(numero)
+
+es_positivo = numero > 0
+
+if es_positivo:
+    write(numero)
+else:
+    write(0)

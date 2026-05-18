@@ -1,0 +1,13 @@
+# Prueba 6 - Fallo lexico
+# Contiene caracteres invalidos que el lexer no reconoce
+
+int a
+a = 10
+
+# El simbolo @ no es valido en MiniLang
+int b
+b = a @ 5
+
+# El simbolo $ tampoco es valido
+int c
+c = 20 $ 3

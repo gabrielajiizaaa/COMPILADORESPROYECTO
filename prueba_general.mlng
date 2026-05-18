@@ -1,0 +1,181 @@
+# ============================================================
+# Prueba General - MiniLang
+# Demuestra todas las caracteristicas del lenguaje
+# ============================================================
+
+
+# --- Funciones -----------------------------------------------
+
+func mayor(int a, int b):
+    int resultado
+    if a > b:
+        resultado = a
+    else:
+        resultado = b
+    return resultado
+
+func factorial(int n):
+    int resultado
+    resultado = 1
+    while n > 1:
+        resultado *= n
+        n -= 1
+    return resultado
+
+func es_par(int n):
+    bool resultado
+    resultado = n // 2 * 2 == n
+    return resultado
+
+
+# --- Variables de todos los tipos ----------------------------
+
+int entero
+float decimal
+bool bandera
+string texto
+
+entero = 42
+decimal = 3.1416
+bandera = true
+texto = "MiniLang"
+
+
+# --- Operaciones aritmeticas ---------------------------------
+
+int suma
+int resta
+int producto
+float division
+int modulo
+int potencia
+
+suma     = entero + 10
+resta    = entero - 10
+producto = entero * 2
+division = entero / 4
+modulo   = entero % 5
+potencia = 2 ** 8
+
+write(suma)
+write(resta)
+write(producto)
+write(division)
+write(modulo)
+write(potencia)
+
+
+# --- Operaciones con float -----------------------------------
+
+float radio
+float pi
+float area
+float circunferencia
+
+pi             = 3.1416
+radio          = 5.0
+area           = pi * radio * radio
+circunferencia = 2 * pi * radio
+
+write(area)
+write(circunferencia)
+
+
+# --- Operaciones logicas y comparaciones ---------------------
+
+bool mayor_que
+bool menor_que
+bool igual
+bool combinado
+
+mayor_que = entero > 10
+menor_que = entero < 100
+igual     = entero == 42
+combinado = mayor_que and menor_que
+
+write(mayor_que)
+write(menor_que)
+write(igual)
+write(combinado)
+
+
+# --- Condicionales -------------------------------------------
+
+if combinado:
+    write(entero)
+else:
+    write(0)
+
+if es_par(entero):
+    write(entero)
+else:
+    write(1)
+
+
+# --- Bucle while con acumulador ------------------------------
+
+int contador
+int acumulador
+
+contador   = 1
+acumulador = 0
+
+while contador <= 10:
+    acumulador += contador
+    contador   += 1
+
+write(acumulador)
+
+
+# --- Llamadas a funciones ------------------------------------
+
+int val_mayor
+int fact_5
+
+val_mayor = mayor(15, 27)
+fact_5    = factorial(5)
+
+write(val_mayor)
+write(fact_5)
+
+
+# --- Cadenas de texto ----------------------------------------
+
+string saludo
+string despedida
+string nombre
+
+nombre    = "Mundo"
+saludo    = "Hola " + nombre
+despedida = "Adios " + nombre
+
+write(saludo)
+write(despedida)
+
+
+# --- Asignaciones compuestas ---------------------------------
+
+int x
+
+x  = 100
+x += 50
+x -= 30
+x *= 2
+x /= 4
+
+write(x)
+
+
+# --- Entrada de datos ----------------------------------------
+
+int numero
+bool es_positivo
+
+read(numero)
+
+es_positivo = numero > 0
+
+if es_positivo:
+    write(numero)
+else:
+    write(0)

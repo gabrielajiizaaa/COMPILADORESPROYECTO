@@ -1,0 +1,16 @@
+# Prueba 7 - Fallo sintactico
+# Contiene errores de estructura que el parser no acepta
+
+int a
+a = 10
+
+# Error: falta el ":" al final del if
+if a > 0
+    write(a)
+
+# Error: falta el ":" al final del while
+while a > 0
+    a -= 1
+
+# Error: declaracion sin tipo
+x = 5

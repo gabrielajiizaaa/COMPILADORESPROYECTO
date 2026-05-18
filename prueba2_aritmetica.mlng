@@ -1,0 +1,25 @@
+# Prueba 2 - Operacion aritmetica basica
+# Demuestra suma, resta, multiplicacion, division y potencia
+
+int a
+int b
+int suma
+int resta
+int producto
+float division
+int potencia
+
+a = 10
+b = 3
+
+suma = a + b
+resta = a - b
+producto = a * b
+division = a / b
+potencia = a ** b
+
+write(suma)
+write(resta)
+write(producto)
+write(division)
+write(potencia)

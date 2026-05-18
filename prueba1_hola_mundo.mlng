@@ -1,0 +1,6 @@
+# Prueba 1 - Hola Mundo
+# Demuestra la salida basica de texto en MiniLang
+
+string mensaje
+mensaje = "Hola Mundo"
+write(mensaje)
